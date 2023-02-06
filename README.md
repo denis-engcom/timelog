@@ -5,10 +5,8 @@ Takes time log input and produces aggregated time log output. Typical file names
 ## Installation
 
 ```sh
-# Clone this repository, then from within repository...
-# This will build `timelog` and place it in your $GOBIN
-# or default to $HOME/go/bin.
-go install github.com/denis-engcom/tools/cmd/timelog
+# Install by building from source
+➜ go install github.com/denis-engcom/timelog@latest
 ```
 
 ## Example usage
@@ -38,7 +36,7 @@ Random notes that should just get ignored
 Command:
 
 ```sh
-timelog < 2022-12_time_log.md > 2022-12_time_log_aggregated.md
+➜ timelog < 2022-12_time_log.md > 2022-12_time_log_aggregated.md
 ```
 
 Example input file `2022-12_time_log_aggregated.md`:

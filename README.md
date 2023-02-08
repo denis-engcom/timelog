@@ -1,6 +1,8 @@
 # Timelog
 
-Takes time log input and produces aggregated time log output. Typical file names for this content would be `yyyy-mm_time_log.md` -> `yyyy-mm_time_log_aggregated.md`
+The command processes timelog input from stdin and outputs data in the following formats:
+* Timelog output format: our own per-day tree-like event aggregation
+* Timeclock (hledger) format: for subsequent processing with hledger (https://hledger.org/)
 
 ## Installation
 
@@ -9,52 +11,80 @@ Takes time log input and produces aggregated time log output. Typical file names
 ➜ go install github.com/denis-engcom/timelog@latest
 ```
 
-## Example usage
-
-Example input file `2022-12_time_log.md`:
-
-```
-# 2022-12-15
-
-930: Troubleshoot webinar registration - Modal not opening
-1000: Daily
-1045: Troubleshoot webinar registration - Modal not opening
-1130: Troubleshoot webinar registration - Understand why email don't fire outside production
-1300: Lunch (and commute)
-1400: OAS judging planning - Sync with Angela
-1630: Release shadowing with Cenxiao
-1715: OAS judging planning - Team sync for admin app
-1800: Troubleshoot video attachments not working
-1830: Troubleshoot webinar registration - Record ticket to improve testing
-1845: EOD
-
----
-
-Random notes that should just get ignored
-```
-
-Command:
+In typical usage, file contents are redirected into the program (stdin) and output from stdout can be redirected to another file.
 
 ```sh
-➜ timelog < 2022-12_time_log.md > 2022-12_time_log_aggregated.md
+# timelog [global options] (stdin)
+timelog < 2023-01_timelog.md > 2023-01_timelog_aggregated.md
+timelog -O timeclock < 2023-01_timelog.md > 2023-01_timelog.timeclock
+timelog -O timeclock < 2023-01_timelog.md | hledger -ftimeclock:- register --daily @/tmp/filter.args > 2023-01_timelog_reports_register.txt
 ```
 
-Example input file `2022-12_time_log_aggregated.md`:
+## Example usage
 
+```sh
+➜ timelog <<EOF
+# 2022-12-15
+
+9:30 Improving the thingy - Changing the doodad
+10:00 Daily Meeting
+10:15 Improving the thingy - Putting the doodad in a different spot
+11:00 Pair Programming
+12:00 Lunch
+12:30 Improving the thingy - Code Review
+14:00 Break - Phooey! That's a lot of work!
+14:30 Improving the thingy - Deployment
+17:30 EOD
+EOF
+```
 ```
 # 2022-12-15
 
-8h15m
-- 3h15m: OAS judging planning
-    - 2h30m: Sync with Angela
-    - 45m: Team sync for admin app
-- 3h: Troubleshoot webinar registration
-    - 1h30m: Understand why email don't fire outside production
-    - 1h15m: Modal not opening
-    - 15m: Record ticket to improve testing
-- 45m: Daily
-- 45m: Release shadowing with Cenxiao
-- 30m: Troubleshoot video attachments not working
+- 8h
+	- 5h45m: Improving the thingy
+		- 3h: Deployment
+		- 1h30m: Code Review
+		- 45m: Putting the doodad in a different spot
+		- 30m: Changing the doodad
+	- 1h: Pair Programming
+	- 30m: Break
+		- 30m: Phooey! That's a lot of work!
+	- 30m: Lunch
+	- 15m: Daily Meeting
+
+```
+```sh
+➜ timelog --output-format timeclock <<EOF
+# 2022-12-15
+
+9:30 Improving the thingy - Changing the doodad
+10:00 Daily Meeting
+10:15 Improving the thingy - Putting the doodad in a different spot
+11:00 Pair Programming
+12:00 Lunch
+12:30 Improving the thingy - Code Review
+14:00 Break - Phooey! That's a lot of work!
+14:30 Improving the thingy - Deployment
+17:30 EOD
+EOF
+```
+```
+i 2022-12-15 09:30 Improving the thingy:Changing the doodad
+o 2022-12-15 10:00
+i 2022-12-15 10:00 Daily Meeting
+o 2022-12-15 10:15
+i 2022-12-15 10:15 Improving the thingy:Putting the doodad in a different spot
+o 2022-12-15 11:00
+i 2022-12-15 11:00 Pair Programming
+o 2022-12-15 12:00
+i 2022-12-15 12:00 Lunch
+o 2022-12-15 12:30
+i 2022-12-15 12:30 Improving the thingy:Code Review
+o 2022-12-15 14:00
+i 2022-12-15 14:00 Break:Phooey! That's a lot of work!
+o 2022-12-15 14:30
+i 2022-12-15 14:30 Improving the thingy:Deployment
+o 2022-12-15 17:30
 ```
 
 ## Next steps
@@ -66,7 +96,7 @@ Configurable...
 * Indentation, spaces vs tabs for indentation
 * Parsing format
     * Section start format (YYYY-MM-DD has no special meaning other than identifying the section)
-    * Line format to replace default `^([[:digit:]]{3,4}): (.*)$`
+    * Line separator ` - `
 
 Use TOML and/or command line args to...
 * `-item-exclude`: Define items to exclude (ex: "Lunch.*", "Break.*")

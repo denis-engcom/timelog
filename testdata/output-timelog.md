@@ -15,10 +15,10 @@
 
 # 2022-12-16
 
-- 9h45m
+- 10h15m
 	- 6h10m: Datastudio
 		- 6h10m: Fix teacher data
-	- 1h15m: Code Review
+	- 1h45m: Code Review
 	- 45m: Lunch
 	- 45m: OAS sync
 	- 30m: Daily

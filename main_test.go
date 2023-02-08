@@ -18,12 +18,12 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func TestProcessAndPrintTimeLogs(t *testing.T) {
+func TestProcessAndPrintTimelog(t *testing.T) {
 	timeLogContent, err := os.Open("testdata/input.md")
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
-	expectedAggregationOutput, err := os.ReadFile("testdata/output.md")
+	expectedAggregationOutput, err := os.ReadFile("testdata/output-timelog.md")
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}
@@ -33,7 +33,29 @@ func TestProcessAndPrintTimeLogs(t *testing.T) {
 		t.Fatalf("%+v", err)
 	}
 	aggregationOutput := bytes.Buffer{}
-	err = outputTimeLogAggregation(timeLogSections, &aggregationOutput)
+	err = printTimelogFormat(timeLogSections, &aggregationOutput)
+	if err != nil {
+		t.Fatalf("%+v", err)
+	}
+	assert.Equal(t, string(expectedAggregationOutput), aggregationOutput.String())
+}
+
+func TestProcessAndPrintTimeclock(t *testing.T) {
+	timeLogContent, err := os.Open("testdata/input.md")
+	if err != nil {
+		t.Fatalf("%+v", err)
+	}
+	expectedAggregationOutput, err := os.ReadFile("testdata/output-hledger.timeclock")
+	if err != nil {
+		t.Fatalf("%+v", err)
+	}
+
+	timeLogSections, err := processTimeLog(timeLogContent)
+	if err != nil {
+		t.Fatalf("%+v", err)
+	}
+	aggregationOutput := bytes.Buffer{}
+	err = printTimeclockFormat(timeLogSections, &aggregationOutput)
 	if err != nil {
 		t.Fatalf("%+v", err)
 	}

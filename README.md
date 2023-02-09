@@ -17,75 +17,56 @@ In typical usage, file contents are redirected into the program (stdin) and outp
 # timelog [global options] (stdin)
 timelog < 2023-01_timelog.md > 2023-01_timelog_aggregated.md
 timelog -O timeclock < 2023-01_timelog.md > 2023-01_timelog.timeclock
-timelog -O timeclock < 2023-01_timelog.md | hledger -ftimeclock:- register --daily @/tmp/filter.args > 2023-01_timelog_reports_register.txt
+timelog -O timeclock < 2023-01_timelog.md | hledger -ftimeclock:- register --daily > 2023-01_timelog_reports_register.txt
 ```
 
 ## Example usage
+
+### Timelog format
 
 ```sh
 ➜ timelog <<EOF
 # 2022-12-15
 
-9:30 Improving the thingy - Changing the doodad
-10:00 Daily Meeting
+9:30 Daily Meeting
 10:15 Improving the thingy - Putting the doodad in a different spot
-11:00 Pair Programming
 12:00 Lunch
 12:30 Improving the thingy - Code Review
 14:00 Break - Phooey! That's a lot of work!
 14:30 Improving the thingy - Deployment
 17:30 EOD
+
+# 2022-12-16
+
+9:30 Daily Meeting
+10:00 Improving the thingy - Removing the doodad altogether
+11:30 EOD
 EOF
 ```
 ```
 # 2022-12-15
 
 - 8h
-	- 5h45m: Improving the thingy
+	- 6h15m: Improving the thingy
 		- 3h: Deployment
+		- 1h45m: Putting the doodad in a different spot
 		- 1h30m: Code Review
-		- 45m: Putting the doodad in a different spot
-		- 30m: Changing the doodad
-	- 1h: Pair Programming
+	- 45m: Daily Meeting
 	- 30m: Break
 		- 30m: Phooey! That's a lot of work!
 	- 30m: Lunch
-	- 15m: Daily Meeting
 
-```
-```sh
-➜ timelog --output-format timeclock <<EOF
-# 2022-12-15
+# 2022-12-16
 
-9:30 Improving the thingy - Changing the doodad
-10:00 Daily Meeting
-10:15 Improving the thingy - Putting the doodad in a different spot
-11:00 Pair Programming
-12:00 Lunch
-12:30 Improving the thingy - Code Review
-14:00 Break - Phooey! That's a lot of work!
-14:30 Improving the thingy - Deployment
-17:30 EOD
-EOF
+- 2h
+	- 1h30m: Improving the thingy
+		- 1h30m: Removing the doodad altogether
+	- 30m: Daily Meeting
 ```
-```
-i 2022-12-15 09:30 Improving the thingy:Changing the doodad
-o 2022-12-15 10:00
-i 2022-12-15 10:00 Daily Meeting
-o 2022-12-15 10:15
-i 2022-12-15 10:15 Improving the thingy:Putting the doodad in a different spot
-o 2022-12-15 11:00
-i 2022-12-15 11:00 Pair Programming
-o 2022-12-15 12:00
-i 2022-12-15 12:00 Lunch
-o 2022-12-15 12:30
-i 2022-12-15 12:30 Improving the thingy:Code Review
-o 2022-12-15 14:00
-i 2022-12-15 14:00 Break:Phooey! That's a lot of work!
-o 2022-12-15 14:30
-i 2022-12-15 14:30 Improving the thingy:Deployment
-o 2022-12-15 17:30
-```
+
+### Timeclock (hledger) format
+
+See [README-timeclock.md](README-timeclock.md)
 
 ## Next steps
 

@@ -1,4 +1,4 @@
-# Timeclock (hledger) format
+# Timeclock (hledger) output format
 
 **You must install `hledger` for your operating system to make use of this output format.** https://hledger.org/install.html
 
@@ -50,8 +50,9 @@ o 2022-12-16 11:30
 
 # `hledger register`
 
+The `register` command will list and sum entries.
+
 ```sh
-# The `register` command will list and sum entries
 ➜ hledger -ftimeclock:- register < 2022-12.timeclock
 ```
 ```
@@ -65,8 +66,9 @@ o 2022-12-16 11:30
 2022-12-16 10:00-11:30   (Improving the thingy:Removing the doodad altogether)           1.50h   10.00h
 ```
 
+The `--daily` flag makes this look much nicer.
+
 ```sh
-# The --daily flag makes this look much nicer.
 ➜ hledger -ftimeclock:- register --daily < 2022-12.timeclock
 ```
 ```
@@ -80,8 +82,9 @@ o 2022-12-16 11:30
              Improving the thingy:Removing the doodad altogether           1.50h   10.00h
 ```
 
+Filter by date: `date:2022-12-16` or a range of dates: `date:2022-12-16..2022-12-17`
+
 ```sh
-# Filter by date: `date:2022-12-16` or a range of dates: `date:2022-12-16..2022-12-17`
 ➜ hledger -ftimeclock:- register --daily date:2022-12-16 < 2022-12.timeclock
 ```
 ```
@@ -89,8 +92,9 @@ o 2022-12-16 11:30
              Improving the thingy:Removing the doodad altogether   1.50h   2.00h
 ```
 
+Apply filtering via regular expression on entries that start with "Lunch".
+
 ```sh
-# Apply filtering on entries that start with "Lunch".
 ➜ hledger -ftimeclock:- register --daily not:acct:^Lunch < 2022-12.timeclock
 ```
 ```
@@ -103,8 +107,9 @@ o 2022-12-16 11:30
              Improving the thingy:Removing the doodad altogether           1.50h   9.50h
 ```
 
+Aggregate hours per day
+
 ```sh
-# Aggregate hours per day
 ➜ hledger -ftimeclock:- register --daily --pivot=date < 2022-12.timeclock
 ```
 ```
@@ -114,8 +119,9 @@ o 2022-12-16 11:30
 
 # `hledger balance`
 
+Print chart of accounts in tree form, sort by amount
+
 ```sh
-# Print chart of accounts in tree form, sort by amount
 ➜ hledger -ftimeclock:- balance --tree --sort-amount < 2022-12.timeclock
 ```
 ```
@@ -131,8 +137,9 @@ o 2022-12-16 11:30
  10.00h
 ```
 
+We can obtain more focused output with `--daily` and filter by `date`.
+
 ```sh
-# When viewing with --daily, output is very chaotic unless you filter for a single date.
 ➜ hledger -ftimeclock:- balance --tree --daily date:2022-12-15 < 2022-12.timeclock
 ```
 ```

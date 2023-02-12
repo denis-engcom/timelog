@@ -1,8 +1,23 @@
 # Timelog
 
-The command processes timelog input from stdin and outputs data in the following formats:
-* Timelog output format: our own per-day tree-like event aggregation
-* Timeclock (hledger) format: for subsequent processing with hledger (https://hledger.org/)
+The purpose of `timelog` is to provide a low-friction approach to logging time at work in a text file, and to sum hours to keep tabs on how much you're under/over working.
+* **I was already logging time in a specific format, so I wrote the tool to parse that notation for (personal) reporting purposes.**
+
+The provided `timelog` command is the conversion of time tracking notation (input) to reporting output.
+
+More specifically, this method can work for you if...
+* **You think of work in terms of when you start and stop activities (not necessarily in terms of duration).**
+* **You prefer the freedom of editing a text file directly (to plan ahead or to enter data retroactively) instead of interacting with a start-stop time tracking tool.**
+
+## Alternatives
+
+If you want a text format geared for durations, [Timedot format](https://hledger.org/dev/hledger.html#timedot) is a light notation that can be used with `hledger` (https://hledger.org/).
+
+If you prefer a start-stop time tracking tool, https://github.com/caarlos0/tasktimer is a simple command line alternative.
+
+If you prefer web-based tooling, https://toggl.com looks to cover a lot of ground in terms of bells-and-whistles.
+
+...and many more!
 
 ## Installation
 
@@ -22,7 +37,20 @@ timelog -O timeclock < 2023-01_timelog.md | hledger -ftimeclock:- register --dai
 
 ## Example usage
 
-### Timelog format
+### Input format
+
+The input consists of day headers and activities.
+* Day headers must be composed of `#`, a space, and the date in `YYYY-MM-DD` format.
+    * Example: `# 2022-12-15`
+    * All activities under the day header belong to that day
+* Activities are composed of a day timestamp (hours and minutes), a space, and a hierarchy of activities and sub-activities separated by ` - ` (space, dash, space).
+    * Example: `11:30 Primary activity`
+    * Example 2: `11:30 Primary activity - Sub-activity`
+    * The provided timestamp can be in the following formats: `9:30`, `09:30`, `930`, `0930`
+
+### Timelog output format
+
+The default reporting output from this tool is a per-day bullet-point list of activity (and sub-activity) durations.
 
 ```sh
 ➜ timelog <<EOF
@@ -64,13 +92,13 @@ EOF
 	- 30m: Daily Meeting
 ```
 
-### Timeclock (hledger) format
+### Timeclock (hledger) output format
+
+The timeclock output format is an intermediate format that can be interpreted by `hledger` for more reporting flexibility.
 
 See [README-timeclock.md](README-timeclock.md)
 
-## Next steps
-
-Instructions/tutorial on how to fill up time log
+## Possible next steps
 
 Configurable...
 * Log level
@@ -79,7 +107,7 @@ Configurable...
     * Section start format (YYYY-MM-DD has no special meaning other than identifying the section)
     * Line separator ` - `
 
-Use TOML and/or command line args to...
+More reporting flexibility with the default output. Command line args to...
 * `-item-exclude`: Define items to exclude (ex: "Lunch.*", "Break.*")
 * `-section-include` + `-item-include`: Define sections (days) to include (filter) and/or tasks to include (filter)
 * Use case: Look at one day at a time using `timelog -section-include 2023-01-09 -item-exclude "Lunch.*" "Break.*"`

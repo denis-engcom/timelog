@@ -60,7 +60,7 @@ TODO provide hledger examples.`,
 timelog < 2023-01_timelog.md > 2023-01_timelog_aggregated.md
 timelog -O timeclock < 2023-01_timelog.md > 2023-01_timelog.timeclock
 timelog -O timeclock < 2023-01_timelog.md | hledger -ftimeclock:- register --daily > 2023-01_timelog_reports_register.txt`,
-		Version:              "0.2.0",
+		Version:              "0.3.0",
 		HideHelpCommand:      true,
 		ArgsUsage:            "(stdin)",
 		Action:               timelog,
@@ -70,7 +70,7 @@ timelog -O timeclock < 2023-01_timelog.md | hledger -ftimeclock:- register --dai
 				Name:    "output-format",
 				Aliases: []string{"O"},
 				Usage:   "Choose output format, choices: (timelog|timeclock)",
-				Value:   "timelog",
+				Value:   "timeclock",
 			},
 		},
 	}

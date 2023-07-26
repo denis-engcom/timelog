@@ -2,15 +2,18 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/urfave/cli/v2"
-	"go.uber.org/zap"
 	"io"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
+	"github.com/urfave/cli/v2"
+	"go.uber.org/zap"
 )
 
 // TODO accept parsing configuration via env vars to override " - " for splitting lines.
@@ -73,11 +76,72 @@ timelog -O timeclock < 2023-01_timelog.md | hledger -ftimeclock:- register --dai
 				Value:   "timeclock",
 			},
 		},
+		Commands: cli.Commands{
+			{
+				Name:    "summary",
+				Aliases: []string{"sum"},
+				Usage:   "Print summary info of timelog input",
+				Action:  getSummary,
+			},
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
 		logger.Fatalf("%+v", err)
 	}
+}
+
+type Summary struct {
+	Day string        `json:"day"`
+	Sum time.Duration `json:"sum"`
+}
+
+func (s *Summary) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		Day string `json:"day"`
+		Sum string `json:"sum"`
+	}{
+		Day: s.Day,
+		Sum: dropTrailingZeros(s.Sum),
+	})
+}
+
+func getSummary(cCtx *cli.Context) error {
+	timeLogSections, err := processTimeLog(os.Stdin)
+	if err != nil {
+		return err
+	}
+	daysMap := map[string]time.Duration{}
+	for _, ts := range timeLogSections {
+		// daysMap[ts.Day] = daysMap[ts.Day] + ts.EventStarts
+		for i := 0; i < len(ts.EventStarts)-1; i++ {
+			start := ts.EventStarts[i].Start
+			end := ts.EventStarts[i+1].Start
+			// >= (instead of >) means we also ignore 0m events.
+			if start >= end {
+				return errors.New("start time cannot be after end time")
+			}
+			daysMap[ts.Day] = daysMap[ts.Day] + (end - start)
+		}
+	}
+	days := make([]Summary, 0)
+	for day, sum := range daysMap {
+		days = append(days, Summary{Day: day, Sum: sum})
+	}
+	sort.Slice(days, func(i, j int) bool {
+		return days[i].Day < days[j].Day
+	})
+	for _, summary := range days {
+		fmt.Printf("%s: %s\n", summary.Day, dropTrailingZeros(summary.Sum))
+	}
+
+	// summaryBytes, err := json.Marshal(&days)
+	// if err != nil {
+	// 	return err
+	// }
+	// fmt.Printf("%s\n", summaryBytes)
+
+	return nil
 }
 
 func timelog(cCtx *cli.Context) error {

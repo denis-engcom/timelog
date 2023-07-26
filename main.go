@@ -79,8 +79,20 @@ timelog -O timeclock < 2023-01_timelog.md | hledger -ftimeclock:- register --dai
 			{
 				Name:    "summary",
 				Aliases: []string{"sum"},
-				Usage:   "Print summary info of timelog input",
-				Action:  getSummary,
+				Usage:   "Print timeclock entries aggregated by day",
+				Action:  summary,
+			},
+			{
+				Name:    "register",
+				Aliases: []string{"reg"},
+				Usage:   "Print timeclock entries in modified register format",
+				Action:  register,
+			},
+			{
+				Name:    "print",
+				Aliases: []string{"p"},
+				Usage:   "Print timeclock entries in collapsed print format",
+				Action:  print,
 			},
 		},
 	}
@@ -90,7 +102,13 @@ timelog -O timeclock < 2023-01_timelog.md | hledger -ftimeclock:- register --dai
 	}
 }
 
-func getSummary(cCtx *cli.Context) error {
+var (
+	TIMECLOCK_FORMAT = "-ftimeclock:-"
+	NO_BREAK         = "not:acct:^Break"
+	NO_LUNCH         = "not:acct:^Lunch"
+)
+
+func summary(cCtx *cli.Context) error {
 	timeLogSections, err := processTimeLog(os.Stdin)
 	if err != nil {
 		return err
@@ -100,7 +118,7 @@ func getSummary(cCtx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	cmd := exec.Command("hledger", "-ftimeclock:-", "register", "not:acct:^Break", "not:acct:^Lunch", "--daily", "--pivot", "date")
+	cmd := exec.Command("hledger", TIMECLOCK_FORMAT, "register", NO_BREAK, NO_LUNCH, "--daily", "--pivot", "date")
 	cmd.Stdin = &timeclockEntries
 	var hledgerRegister bytes.Buffer
 	cmd.Stdout = &hledgerRegister
@@ -112,6 +130,60 @@ func getSummary(cCtx *cli.Context) error {
 
 	cmd = exec.Command("awk", "{ printf(\"%s: %s (%s)\\n\", $1, $2, $3) }")
 	cmd.Stdin = &hledgerRegister
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+func register(cCtx *cli.Context) error {
+	timeLogSections, err := processTimeLog(os.Stdin)
+	if err != nil {
+		return err
+	}
+	var timeclockEntries bytes.Buffer
+	err = printTimeclockFormat(timeLogSections, &timeclockEntries)
+	if err != nil {
+		return err
+	}
+	args := []string{TIMECLOCK_FORMAT, "register", NO_BREAK, NO_LUNCH}
+	period := cCtx.Args().First()
+	if period != "" {
+		args = append(args, "-p", period)
+	}
+	cmd := exec.Command("hledger", args...)
+	cmd.Stdin = &timeclockEntries
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+func print(cCtx *cli.Context) error {
+	timeLogSections, err := processTimeLog(os.Stdin)
+	if err != nil {
+		return err
+	}
+	var timeclockEntries bytes.Buffer
+	err = printTimeclockFormat(timeLogSections, &timeclockEntries)
+	if err != nil {
+		return err
+	}
+	args := []string{TIMECLOCK_FORMAT, "print", NO_BREAK, NO_LUNCH}
+	period := cCtx.Args().First()
+	if period != "" {
+		args = append(args, "-p", period)
+	}
+	cmd := exec.Command("hledger", args...)
+	cmd.Stdin = &timeclockEntries
+	var hledgerPrint bytes.Buffer
+	cmd.Stdout = &hledgerPrint
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	cmd = exec.Command("paste", "-d", "\\0", "-", "-", "-")
+	cmd.Stdin = &hledgerPrint
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()

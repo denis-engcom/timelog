@@ -100,12 +100,26 @@ See [README-timeclock.md](README-timeclock.md)
 
 ## Possible next steps
 
+General notation from https://klog.jotaen.net
+* Accepting go durations for retroactive time estimations (like timedot)
+    * But how would we print the mix of timestamp and durations?
+
+Idea from third-party libs
+* Replacement for `hh:mm EOD` lines by accepting `hh:mm-hh:mm Last event of the day` which makes the ranges unambiguous
+* https://klog.jotaen.net/#day-shifting
+* https://klog.jotaen.net/#bookmarks
+* https://github.com/larose/utt?tab=readme-ov-file#activity-type
+
+Better reporting?
+* https://github.com/larose/utt?tab=readme-ov-file#report-1
+* https://klog.jotaen.net/#evaluate
+
 Configurable...
 * Log level
 * Indentation, spaces vs tabs for indentation
 * Parsing format
     * Section start format (YYYY-MM-DD has no special meaning other than identifying the section)
-    * Line separator ` - `
+    * Allow capability of changing line separator ` - ` to `: ` (as an example)
 
 More reporting flexibility with the default output. Command line args to...
 * `-item-exclude`: Define items to exclude (ex: "Lunch.*", "Break.*")

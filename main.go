@@ -4,15 +4,16 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/urfave/cli/v2"
-	"go.uber.org/zap"
 	"io"
 	"os"
 	"os/exec"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
+	"github.com/urfave/cli/v2"
+	"go.uber.org/zap"
 )
 
 // TODO accept parsing configuration via env vars to override " - " for splitting lines.
@@ -85,14 +86,20 @@ timelog -O timeclock < 2023-01_timelog.md | hledger -ftimeclock:- register --dai
 			{
 				Name:    "register",
 				Aliases: []string{"reg"},
-				Usage:   "Print timeclock entries in modified register format",
+				Usage:   "Print timeclock entries in modified \"hledger register\" format",
 				Action:  register,
 			},
 			{
 				Name:    "print",
 				Aliases: []string{"p"},
-				Usage:   "Print timeclock entries in collapsed print format",
+				Usage:   "Print timeclock entries in collapsed \"hledger print\" format",
 				Action:  print,
+			},
+			{
+				Name:    "balance",
+				Aliases: []string{"b"},
+				Usage:   "Print timeclock entries in \"hledger balance\" format",
+				Action:  balance,
 			},
 		},
 	}
@@ -128,6 +135,7 @@ func summary(cCtx *cli.Context) error {
 		return err
 	}
 
+	// TODO easy to covert to using go get github.com/cheynewallace/tabby?
 	cmd = exec.Command("awk", "{ printf(\"%s: %s (%s)\\n\", $1, $2, $3) }")
 	cmd.Stdin = &hledgerRegister
 	cmd.Stdout = os.Stdout
@@ -184,6 +192,28 @@ func print(cCtx *cli.Context) error {
 
 	cmd = exec.Command("paste", "-d", "\\0", "-", "-", "-")
 	cmd.Stdin = &hledgerPrint
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+func balance(cCtx *cli.Context) error {
+	timeLogSections, err := processTimeLog(os.Stdin)
+	if err != nil {
+		return err
+	}
+	var timeclockEntries bytes.Buffer
+	err = printTimeclockFormat(timeLogSections, &timeclockEntries)
+	if err != nil {
+		return err
+	}
+	args := []string{TIMECLOCK_FORMAT, "balance", NO_BREAK, NO_LUNCH, "--tree", "--sort-amount"}
+	period := cCtx.Args().First()
+	if period != "" {
+		args = append(args, "-p", period)
+	}
+	cmd := exec.Command("hledger", args...)
+	cmd.Stdin = &timeclockEntries
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
